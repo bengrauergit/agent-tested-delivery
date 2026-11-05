@@ -4,6 +4,8 @@ A working method for shipping a web app where Claude Code agents build each chan
 
 Nothing here depends on a particular framework, host or database. Where the notes mention a tool, treat it as one option.
 
+![A check report: unit tests, type check, production build and code review all pass, but the phone-screen check at 375 x 548 fails because two warnings cover the buttons people need to tap.](docs/images/checks-caught-a-bug.png)
+
 ## The checks
 
 1. Unit tests, with every bug fix shipping a test that failed before the fix.
