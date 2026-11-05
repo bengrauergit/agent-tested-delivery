@@ -1,0 +1,13 @@
+{
+  "name": "agent-tested-delivery-examples",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "golden:baseline": "playwright test golden --update-snapshots",
+    "golden:compare": "playwright test golden"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.0"
+  }
+}
