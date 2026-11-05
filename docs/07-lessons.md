@@ -1,17 +1,21 @@
-# Lessons
+# Keeping checks honest
 
-These are patterns in how the checks themselves go wrong. Each one has a counter that is now part of the process.
+General rules for checks that can pass while the thing they guard is broken.
 
-1. A check can pass while measuring the wrong thing. "No page scroll" stays green when items slide under a fixed bottom bar on short screens, because nothing scrolls. Check that each item sits inside its area and is the element under its own centre point, at several screen heights, as `examples/playwright/layout-check.cjs` does.
+1. Measure the outcome, not a proxy. "No page scroll" can stay green while content sits under a fixed bar. Check that each item is inside its area and is the element under its own centre point, at several screen heights, as `examples/playwright/tests/layout.spec.ts` does.
 
-2. A fix can create a new fault nearby. Moving notices into an overlay so they take no space can leave the overlay intercepting taps on the content beneath it. When a fix changes layering or layout, add a check that the content underneath can still be used.
+2. A check over an empty set passes. A layout or access check that finds no items, or no container, has checked nothing. Assert that what you are measuring exists before measuring it.
 
-3. An HTTP status can give a false green. A protected page that starts streaming a loading state before redirecting returns 200 to the wrong role. Judge access by whether the protected content appears and by the final URL, as `examples/playwright/access-check.cjs` does.
+3. When a fix changes layering or layout, check what sits underneath. Anything placed over other content can intercept taps or clicks meant for it.
 
-4. "Merges cleanly" is a claim, not a result. When two open pull requests touch the same file, test-merge them together before merging either.
+4. Judge access by content and destination, then test the data layer. A status code or a hidden button is not authorisation. The UI check shows what the user sees; a request to the API or database as the wrong role shows what they can get.
 
-5. A reported bug may not be the real problem. Measure before fixing. A table reported as cut off on phones may lay out correctly but give no sign that there are more columns; the right change is then a scroll hint, not a layout fix.
+5. Wait for the state you are about to read. Reading saved data, or asserting that something is absent, before the app has settled gives results that pass or fail by timing.
 
-6. Leftover test data can block the next test. If a cleanup step needs an approval that times out, the stale records can make the app refuse the next run. Clean up in the same run, and sweep marked test rows on a schedule.
+6. "Merges cleanly" is a claim, not a result. When two open pull requests touch the same files, test-merge them together in a scratch worktree before merging either.
 
-7. A brief that lists degenerate cases finds faults no one would try by hand. Asking the tester to repeat a flow offline, with double taps and with a reload part way through regularly turns up crashes that normal use would not.
+7. Reproduce before fixing. A reported fault may be real, absent, or a different problem than described. Measure first and fix what the measurement shows.
+
+8. Clean up in the same run. Leftover test records can change what the app allows next time and make later runs fail for unrelated reasons. Add a scheduled sweep of marked test rows as a backstop.
+
+9. Write the degenerate cases into the brief. Offline, repeated submits and a reload part way through a flow find faults that ordinary use rarely reaches, but only when someone asks for them.
