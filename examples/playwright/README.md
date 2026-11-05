@@ -1,15 +1,13 @@
 # Example check scripts
 
-Plain Playwright scripts. Run with Node, against a preview URL, with test credentials in environment variables.
+Plain Playwright scripts, run with Node against a preview URL, with test credentials in environment variables. For example:
 
 ```
-BASE=https://your-preview.example.app TEST_EMAIL=coach@example.test TEST_PW=... node golden.cjs old.json
+BASE=https://your-preview.example.com TEST_EMAIL=manager@example.test TEST_PW=your-test-password node golden.cjs old.json
 ```
 
-| Script | What it proves |
-|---|---|
-| `golden.cjs` | Plays a fixed scenario and dumps every saved event, normalised, so two builds can be diffed |
-| `layout-check.cjs` | Every item sits inside its area and above a fixed bottom bar, at several screen sizes; fails on covered items, not just page scroll |
-| `access-check.cjs` | A protected page never shows its content to the wrong role, judged by content and final URL, not HTTP status |
+- `golden.cjs` plays a fixed scenario and writes every saved event, normalised, so the output from two builds can be diffed.
+- `layout-check.cjs` checks that every item sits inside its area, above any fixed bottom bar, and is not covered by an overlay, at several viewport sizes. It fails on covered items, not only on page scroll.
+- `access-check.cjs` checks that a protected page never shows its content to the wrong role, judged by the content and the final URL rather than the HTTP status.
 
-They are templates: change the selectors, routes and sign-in steps to match your app.
+They are templates. Change the selectors, routes and sign-in steps to match your app.

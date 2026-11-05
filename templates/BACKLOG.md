@@ -1,27 +1,25 @@
 # Backlog
 
-The one view of work, so nothing lives only in chat.
+The one list of work, so nothing lives only in a conversation.
 
 ## How this backlog works
 
-Every item sits in exactly one stage and moves one stage at a time. The owner decides priority; the main session orders within it; builders build.
+Each item sits in one stage and moves forward one stage at a time. The owner sets priority, the main session orders items within it, and builders build.
 
-| Stage | What it means | Leaves the stage when |
-|---|---|---|
-| **Inbox** | Captured in one line, with who raised it and when | Read and understood |
-| **Needs framing** | Outcome (who, what changes for them) and measure (done-signal and the signal it worked) | Both are written down |
-| **Ready** | User story, checkable acceptance criteria with degenerate cases, size S/M/L, devil's advocate gate | Gate passed and a builder is free |
-| **Building** | One PR each. WIP limit [2] | PR open with its evidence block |
-| **Review** | Code review always; security for data paths; browser tester always | All pass and checks are green |
-| **Shipped** | Merged, with PR number, date and the signal to watch | Signal read at the next evening pass |
+- Inbox: captured in one line, with who raised it.
+- Needs framing: the outcome (who it is for, what changes for them) and the measure (how you know it is done, and the signal that it worked).
+- Ready: a user story, checkable acceptance criteria including degenerate cases, a size of S, M or L, and the devil's advocate's review of the plan.
+- Building: one pull request per item, work-in-progress limit [2].
+- Review: code review always, security review for data paths, browser tester always.
+- Shipped: merged, with the pull request and the signal to watch, read at the next evening pass.
 
-**Twice-daily passes.** Morning: groom the top 2 into Ready, start builds. Evening: merge what passed, check production, ship report.
+Regular passes: in the morning, groom the top [2] items into Ready and start builds; in the evening, merge what passed, check production and note what shipped.
 
-**The devil's advocate reviews every item before it ships.**
+The devil's advocate reviews every item before it ships.
 
-**Ships without asking the owner:** small, reversible items once they pass review. Rule, privacy, schema, cost or dependency changes go to the owner first.
+Small, reversible items ship once they pass review. Changes to a product rule, a privacy rule, the schema, a running cost or a dependency go to the owner first.
 
-## Now / Next (ranked, at most 8)
+## Now and next (ranked, at most 8)
 
 1.
 
@@ -35,4 +33,4 @@ Every item sits in exactly one stage and moves one stage at a time. The owner de
 
 ## Inbox
 
-## Done recently
+## Shipped recently
