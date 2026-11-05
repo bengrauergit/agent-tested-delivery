@@ -1,67 +1,61 @@
 # Agent-tested delivery
 
-A playbook for shipping a real web app where **AI agents build, test and review every change, and the product owner never taps through the app to test it.**
+A working method for shipping a web app where Claude Code agents build each change and other agents test and review it before it merges. The human owner sets priorities and makes the decisions that are hard to reverse; nobody taps through the app by hand to test it. This repo holds the process notes, agent definitions, templates and example check scripts. It suits a small team or a solo owner running a production web app who wants agents to do most of the building, and who is willing to keep test accounts, preview deploys and an automated browser in place to make that safe.
 
-It came out of running a live mobile web app (Next.js, Supabase, Vercel) with Claude Code agents. On one day in November 2026 this setup shipped 7 pull requests, ran 1,066 automated tests per change, and caught a layout bug that every other check had passed. The owner made decisions; the agents did the building and the testing.
+Nothing here depends on a particular framework, host or database. Where the notes mention a tool, treat it as one option.
 
-Everything here is generic. Swap in your own stack.
+## The checks
 
-## The idea in one picture
+A change merges only when all of these pass:
 
-Think of a toy factory. One robot builds the toy. Five different checkers look at it before it goes on the shelf.
+1. Unit tests, with every bug fix shipping a test that failed before the fix.
+2. A type check and a production build.
+3. A preview deploy of the pull request, so later checks run against a real server.
+4. A browser tester: a separate agent session that drives a headless browser through the preview as each test role, then checks what was written to the database.
+5. Independent review: a code reviewer on every change, a security reviewer on anything touching auth or data access, and a devil's advocate who tries to show the plan or change is wrong.
 
-| # | Checker | What it is | What it catches |
-|---|---|---|---|
-| 1 | Unit tests | Small scripts that poke one piece of code each, written red first | "This function gives the wrong answer" |
-| 2 | Type check and build | The compiler reads everything, then builds it like production | "These parts don't fit together" |
-| 3 | Preview deploy | A full private copy of the app for every pull request | "It works on a real server, not just on the builder's machine" |
-| 4 | Browser tester | A separate agent session that drives headless Chrome as pretend users | "When you actually tap through it, this breaks" |
-| 5 | Reviewers | A code reviewer, a security reviewer, and a devil's advocate | "This is wrong, risky, or leaks private data" |
+After a merge, the main session reads production errors for the changed area. [docs/01-checks.md](docs/01-checks.md) explains what each check catches that the others miss.
 
-Nothing merges unless all five say yes. After it merges, the main session checks production errors.
+## Repo map
 
-## What's in this repo
+- `docs/01-checks.md`: each check and why it is there.
+- `docs/02-pipeline.md`: backlog stages, review gates, and what ships without the owner.
+- `docs/03-browser-tester.md`: running the browser tester session.
+- `docs/04-event-golden.md`: proving a redesign changed nothing underneath.
+- `docs/05-red-first.md`: why each fix carries a test that failed first.
+- `docs/06-limits.md`: what automated checks miss, and how to watch for it in production.
+- `docs/07-lessons.md`: recurring failure patterns in the checks themselves.
+- `agents/`: agent definitions for `.claude/agents/`.
+- `templates/CLAUDE.md` and `templates/BACKLOG.md`: starting points for your project.
+- `examples/playwright/`: an event golden, a layout check and an access check.
 
-| Path | What it gives you |
-|---|---|
-| [docs/01-the-five-checkers.md](docs/01-the-five-checkers.md) | Each checker in detail, and why each one exists |
-| [docs/02-pipeline.md](docs/02-pipeline.md) | The backlog stages, the review gates, and what ships without asking the owner |
-| [docs/03-browser-tester.md](docs/03-browser-tester.md) | How the browser tester session works: test accounts, phone sizes, fakes, cleanup |
-| [docs/04-event-golden.md](docs/04-event-golden.md) | Proving a redesign changed nothing underneath: record events on old and new, diff them |
-| [docs/05-red-first.md](docs/05-red-first.md) | Why every fix ships with a test that failed first |
-| [docs/06-what-robots-cant-test.md](docs/06-what-robots-cant-test.md) | The honest gaps, and how to watch for them after release |
-| [docs/07-lessons.md](docs/07-lessons.md) | Real misses and how the setup caught them |
-| [agents/](agents/) | Agent definitions you can drop into `.claude/agents/` |
-| [templates/CLAUDE.md](templates/CLAUDE.md) | The always-loaded rules that make agents follow the process |
-| [templates/BACKLOG.md](templates/BACKLOG.md) | A backlog file with the pipeline header |
-| [examples/playwright/](examples/playwright/) | Check scripts: an event golden, a layout check, an access check |
-
-## Quick start
+## Setting it up
 
 1. Copy `agents/*.md` into your project's `.claude/agents/`.
-2. Copy `templates/CLAUDE.md` into your project root and fill in the bracketed parts.
+2. Copy `templates/CLAUDE.md` to your project root and fill in the bracketed parts.
 3. Copy `templates/BACKLOG.md` to `BACKLOG.md`.
-4. Create **test accounts** in your app (one per role) and a **test team or workspace** that holds only fake data. Put their passwords in your environment's secrets, never in the repo.
-5. Turn on preview deploys for pull requests (Vercel, Netlify, Render or similar).
-6. Start a second Claude Code session as the **browser tester** (see docs/03). The main session sends it test briefs and it reports back.
-7. Ask the main session to build something. Watch it go through the gates.
+4. In your app, create one test account per role and a test workspace that holds only fake data. Keep their passwords in your environment's secret store, not in the repo.
+5. Turn on your hosting provider's preview deploys for pull requests.
+6. Give the browser tester somewhere to run Playwright with Chromium installed, and read access to the database (writes limited to test data).
+7. Start a second Claude Code session as the browser tester (see `docs/03-browser-tester.md`). The main session sends it briefs and reads its reports.
+8. Ask the main session to take the top backlog item through the pipeline, and adjust the rules where they do not fit your project.
 
 ## Roles
 
-| Role | Job | Writes code? |
-|---|---|---|
-| Main session (product owner's assistant) | Orders the backlog, briefs agents, merges, checks production | Small fixes only |
-| Builder | Builds one slice per pull request, with an evidence block | Yes |
-| Business analyst | Turns an idea into user stories with checkable acceptance criteria | No |
-| Devil's advocate | Tries to prove the plan or the change wrong, before code and before ship | No |
-| Code reviewer | Independent review of the diff: correctness, quality, conventions | No |
-| Security reviewer | Tries the data paths as each kind of user | No |
-| Browser tester | Drives the preview as real roles, checks the database after | No |
+- Main session: orders the backlog, briefs the other agents, merges, checks production. Makes small fixes only.
+- Builder: builds one slice per pull request and attaches an evidence block.
+- Business analyst: turns an idea into stories with checkable acceptance criteria.
+- Devil's advocate: challenges the plan before code starts and the change before it ships.
+- Code reviewer: reviews the diff it did not write.
+- Security reviewer: tests the data paths as each role.
+- Browser tester: uses the preview as each role and checks the database afterwards.
 
-## What the owner still does
+Only the builder and the main session write code.
 
-Decides. Anything that changes a product rule, a privacy rule, the schema, a cost or a dependency comes to the owner as a short question with options and a recommendation. Everything small and reversible ships on its own once it passes the gates.
+## What stays with the owner
+
+Priorities, and any change to a product rule, a privacy rule, the database schema, running costs or dependencies. These reach the owner as one question with options and a recommendation. Small, reversible changes ship once they pass the checks. The owner should also read the production failure counts now and then, because some faults only show up on real devices (see `docs/06-limits.md`).
 
 ## Licence
 
-MIT. Use it, change it, share it.
+MIT. See `LICENSE`.

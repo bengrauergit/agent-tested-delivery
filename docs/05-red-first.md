@@ -1,17 +1,9 @@
 # Red first
 
-Every bug fix ships with a test that **failed before the fix and passes after**. Every feature's acceptance criteria become tests in the same pull request.
+Each bug fix ships with a test that failed before the fix and passes after it. Each feature's acceptance criteria become tests in the same pull request.
 
-## Why
+A test you never saw fail may not be testing anything. The failing run shows the bug was real, the passing run shows it is gone, and the test stays behind so the bug cannot return unnoticed.
 
-- A test you never saw fail might not be testing anything.
-- The failing run is the proof the bug was real and is now gone.
-- The test stays as the contract, so the bug can't come back silently.
+In the evidence block, the builder names the test file and gives both results, for example "failing on main, passing on the branch", with the counts from each run. Reviewers treat a fix without a red-first test as incomplete.
 
-## How the builder shows it
-
-In the PR's evidence block: "red first: 9 of 11 failing on main, 11 of 11 passing on the branch", with the test file named. Reviewers treat a missing red-first test as an incomplete PR.
-
-## When you can't
-
-Some things have no unit seam (a layout, a real-device behaviour). Then the red-first check is a browser script that fails on the old build, for example "the first bench player is cut off: scrollLeft 80". Say so in the PR.
+Some faults have no unit-level seam, such as a layout problem or something that only happens in a real browser. In that case the red-first check is a browser script that fails against the old build, for example "the first list item is cut off: its left edge is outside the container". Say so in the pull request.
