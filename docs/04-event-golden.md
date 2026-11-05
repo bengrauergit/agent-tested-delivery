@@ -1,26 +1,25 @@
 # The event golden
 
-How to prove a redesign changed how things look and nothing about what they do.
+An event golden shows that, for a scripted path, a redesigned screen saves the same data as the old one. A redesign mostly touches markup and styles, but faults tend to come from the wiring: a handler attached to the wrong button, a guard lost while restructuring a component. Recording what the app saves before and after the change shows whether the scripted path behaves the same. It says nothing about paths the script does not take.
 
-## The idea
+## Method
 
-Two students do the same exam. If their answer sheets match exactly, they agree.
+1. Write a spec that plays a fixed scenario through the UI. In an orders app that might be: create an order, add two items, remove one, undo, check out.
+2. Run it against the old build and record what the app saved: event or row types and their payloads.
+3. Run it against the new build and record the same.
+4. Normalise anything that varies between runs, including inside payloads: generated ids become stable indexes, timestamps become placeholders, and rows are sorted stably.
+5. Compare the two recordings. They should match.
 
-1. Write a script that plays a fixed scenario through the UI: in a game-time app, for example, kick off, swap two players, move a player to a line, mark one out and back, score with a scorer, undo, half-time, second half, full time.
-2. Run it on the old build and record everything the app saved: event types and payloads.
-3. Run it on the new build and record the same.
-4. Normalise anything random (ids become names or indexes, timestamps become order).
-5. Diff the two. They must be byte-identical.
+Playwright's snapshot assertions do the recording and comparison: run once against the old build with `--update-snapshots`, then against the new build without it.
 
-## Why it works
+## Notes
 
-A redesign touches markup and styles. Bugs hide in the wiring: a handler hooked to the wrong button, a gate dropped in a restructure. The golden catches every one of those without anyone reading the diff line by line.
+Run it at every viewport size you support, because a new layout may hide a control at one size only. Include undo and linked records (a line item that refers to an order, a refund that refers to a payment), since references are where changes break quietly.
 
-## Tips
+Wait for the app to finish saving before you read what it saved, or the recording will vary between runs.
 
-- Run it at every screen size you support. The new layout may hide a control at one size only.
-- Cover undo and linked events (a scorer linked to a goal), because those carry references that break quietly.
-- Block the network call that syncs to production while you run it, so no test data lands there.
-- Commit the script, so the next PR can rerun it. A proof that lives in a scratch folder can't be checked by a reviewer.
+Blocking the call that syncs to the server keeps test data out of the backend, but it also changes behaviour: retry and offline-queue code runs that would not run normally, and anything the server adds is missing. If the scenario must reach the server, let it through to a test workspace and delete the test rows afterwards instead.
 
-See [examples/playwright/golden.cjs](../examples/playwright/golden.cjs).
+Clean up what the run created, and commit the spec so later pull requests can rerun it.
+
+See [examples/playwright/tests/golden.spec.ts](../examples/playwright/tests/golden.spec.ts).
